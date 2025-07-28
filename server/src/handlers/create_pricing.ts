@@ -1,16 +1,28 @@
 
+import { db } from '../db';
+import { pricingTable } from '../db/schema';
 import { type CreatePricingInput, type Pricing } from '../schema';
 
-export async function createPricing(input: CreatePricingInput): Promise<Pricing> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating new pricing configuration
-    // for ride calculations and persisting it in the database.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
-        base_price: input.base_price,
-        price_per_minute: input.price_per_minute,
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Pricing);
-}
+export const createPricing = async (input: CreatePricingInput): Promise<Pricing> => {
+  try {
+    // Insert pricing record
+    const result = await db.insert(pricingTable)
+      .values({
+        base_price: input.base_price.toString(), // Convert number to string for numeric column
+        price_per_minute: input.price_per_minute.toString() // Convert number to string for numeric column
+      })
+      .returning()
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    const pricing = result[0];
+    return {
+      ...pricing,
+      base_price: parseFloat(pricing.base_price), // Convert string back to number
+      price_per_minute: parseFloat(pricing.price_per_minute) // Convert string back to number
+    };
+  } catch (error) {
+    console.error('Pricing creation failed:', error);
+    throw error;
+  }
+};

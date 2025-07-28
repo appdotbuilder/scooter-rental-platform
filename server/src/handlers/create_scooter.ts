@@ -1,20 +1,32 @@
 
+import { db } from '../db';
+import { scootersTable } from '../db/schema';
 import { type CreateScooterInput, type Scooter } from '../schema';
 
-export async function createScooter(input: CreateScooterInput): Promise<Scooter> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is adding a new scooter to the fleet
-    // and persisting it in the database with initial location.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const createScooter = async (input: CreateScooterInput): Promise<Scooter> => {
+  try {
+    // Insert scooter record
+    const result = await db.insert(scootersTable)
+      .values({
         serial_number: input.serial_number,
-        status: 'available',
-        battery_level: 100,
-        latitude: input.latitude,
-        longitude: input.longitude,
-        is_locked: true,
-        last_ping: new Date(),
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Scooter);
-}
+        latitude: input.latitude.toString(), // Convert number to string for numeric column
+        longitude: input.longitude.toString(), // Convert number to string for numeric column
+        status: 'available', // Default status
+        battery_level: 100, // Default battery level
+        is_locked: true // Default locked state
+      })
+      .returning()
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    const scooter = result[0];
+    return {
+      ...scooter,
+      latitude: parseFloat(scooter.latitude), // Convert string back to number
+      longitude: parseFloat(scooter.longitude) // Convert string back to number
+    };
+  } catch (error) {
+    console.error('Scooter creation failed:', error);
+    throw error;
+  }
+};

@@ -1,9 +1,19 @@
 
+import { db } from '../db';
+import { paymentCardsTable } from '../db/schema';
 import { type PaymentCard } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function getUserPaymentCards(userId: number): Promise<PaymentCard[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all payment cards for a specific user
-    // from the database.
-    return Promise.resolve([]);
-}
+export const getUserPaymentCards = async (userId: number): Promise<PaymentCard[]> => {
+  try {
+    const result = await db.select()
+      .from(paymentCardsTable)
+      .where(eq(paymentCardsTable.user_id, userId))
+      .execute();
+
+    return result;
+  } catch (error) {
+    console.error('Failed to get user payment cards:', error);
+    throw error;
+  }
+};

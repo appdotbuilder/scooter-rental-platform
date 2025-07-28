@@ -1,9 +1,22 @@
 
+import { db } from '../db';
+import { scootersTable } from '../db/schema';
 import { type Scooter } from '../schema';
 
-export async function getAllScooters(): Promise<Scooter[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all scooters in the fleet
-    // for admin management and monitoring purposes.
-    return Promise.resolve([]);
-}
+export const getAllScooters = async (): Promise<Scooter[]> => {
+  try {
+    const results = await db.select()
+      .from(scootersTable)
+      .execute();
+
+    // Convert numeric fields back to numbers for Zod schema compliance
+    return results.map(scooter => ({
+      ...scooter,
+      latitude: parseFloat(scooter.latitude),
+      longitude: parseFloat(scooter.longitude)
+    }));
+  } catch (error) {
+    console.error('Failed to fetch scooters:', error);
+    throw error;
+  }
+};
